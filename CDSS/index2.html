@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CDSS Demo & Lecture Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            background: #fff;
+            padding: 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            max-width: 1164px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .scenarios {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-scenario {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #e2e8f0;
+            color: #1e293b;
+            transition: 0.2s;
+        }
+        .btn-scenario:hover {
+            background-color: #cbd5e1;
+        }
+        .btn-notes {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #2563eb;
+            color: #ffffff;
+            transition: 0.2s;
+            margin-top: 12px;
+        }
+        .btn-notes:hover {
+            background-color: #1d4ed8;
+        }
+        /* Hidden Notes Division */
+        #cdss-notes {
+            display: none;
+            max-width: 1160px;
+            margin: 0 auto 20px auto;
+            background: #ffffff;
+            padding: 22px;
+            border-radius: 8px;
+            border-left: 6px solid #2563eb;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .note-box {
+            background: #f8fafc;
+            padding: 14px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .note-box h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1e40af;
+            font-size: 1rem;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.1rem;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 8px;
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .val-badge {
+            background: #2563eb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .rule-box {
+            background: #f8fafc;
+            padding: 12px;
+            border-left: 5px solid #94a3b8;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .rule-box.active {
+            border-left-color: #16a34a;
+            background: #dcfce7;
+            color: #14532d;
+            font-weight: bold;
+        }
+        .rule-box.critical {
+            border-left-color: #dc2626;
+            background: #fee2e2;
+            color: #7f1d1d;
+            font-weight: bold;
+        }
+        .alert {
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            font-size: 0.92rem;
+        }
+        .alert-normal {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .alert-info {
+            background-color: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bae6fd;
+        }
+        .alert-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="margin:0 0 8px 0; font-size: 1.5rem;">Clinical Decision Support System (CDSS) Simulator</h1>
+    <p style="margin:0; color:#555; font-size:0.95rem;">Click a preset patient scenario or drag any slider to observe how the CDSS evaluates clinical rules:</p>
+    
+    <div class="scenarios">
+        <button class="btn-scenario" onclick="loadScenario(37.0, 75, 7.5, 'none', 'none')">🟢 Healthy Patient</button>
+        <button class="btn-scenario" onclick="loadScenario(40.5, 75, 7.5, 'none', 'none')">🌡️ Isolated High Fever (Max Temp)</button>
+        <button class="btn-scenario" onclick="loadScenario(38.9, 112, 14.5, 'none', 'none')">🟡 Sepsis Suspect (Multi-Rule)</button>
+        <button class="btn-scenario" onclick="loadScenario(38.5, 95, 11.0, 'penicillin', 'amoxicillin')">🔴 Medication Error</button>
+    </div>
+
+    <button id="toggle-notes-btn" class="btn-notes" onclick="toggleNotes()">📚 Show CDSS Lecture Notes</button>
+</div>
+
+<!-- Separate Division for CDSS Notes (Hidden by Default) -->
+<div id="cdss-notes">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+        <h2 style="margin: 0; border: none; padding: 0;">📖 Quick Reference: Clinical Decision Support Systems (CDSS)</h2>
+        <button onclick="toggleNotes()" style="background: #ef4444; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">Close ✕</button>
+    </div>
+    
+    <p style="margin-top: 12px; font-size: 0.95rem;">
+        A <strong>Clinical Decision Support System (CDSS)</strong> is a health information technology system designed to provide physicians, nurses, and other health professionals with clinical decision support—assisting with clinical decision-making tasks at the point of care.
+    </p>
+
+    <div class="notes-grid">
+        <div class="note-box">
+            <h3>1. Three Core Components</h3>
+            <ul style="margin: 0; padding-left: 18px;">
+                <li><strong>Knowledge Base:</strong> Compiled clinical rules, guidelines, and drug interaction databases (IF-THEN logic).</li>
+                <li><strong>Inference Engine:</strong> The processor that combines the rules in the Knowledge Base with actual patient data from the EHR.</li>
+                <li><strong>Communication Mechanism:</strong> How data enters the system and how alerts/recommendations are displayed to the clinician.</li>
+            </ul>
+        </div>
+
+        <div class="note-box">
+            <h3>2. Types of CDSS</h3>
+            <ul style="margin: 0; padding-left: 18px;">
+                <li><strong>Knowledge-Based (Shown Below):</strong> Uses explicit programmed IF-THEN rules created by medical experts.</li>
+                <li><strong>Non-Knowledge-Based:</strong> Uses Artificial Intelligence (AI) or Machine Learning (ML) to find patterns in historical clinical data without hard-coded rules.</li>
+            </ul>
+        </div>
+
+        <div class="note-box">
+            <h3>3. The "Five Rights" of CDSS</h3>
+            To be effective, a CDSS must deliver:
+            <ol style="margin: 4px 0 0 0; padding-left: 18px;">
+                <li>The <strong>right information</strong></li>
+                <li>To the <strong>right person</strong></li>
+                <li>In the <strong>right intervention format</strong></li>
+                <li>Through the <strong>right channel</strong></li>
+                <li>At the <strong>right time in workflow</strong></li>
+            </ol>
+        </div>
+
+        <div class="note-box">
+            <h3>4. Key Challenges in Informatics</h3>
+            <ul style="margin: 0; padding-left: 18px;">
+                <li><strong>Alert Fatigue:</strong> Too many insignificant pop-ups cause clinicians to ignore or override critical alerts.</li>
+                <li><strong>Workflow Disruption:</strong> Poorly timed alerts slow down patient care.</li>
+                <li><strong>Rule Maintenance:</strong> Medical guidelines change frequently, requiring constant updates to the Knowledge Base.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Main Interactive Simulator Division -->
+<div class="container">
+    <!-- Column 1: EHR Input -->
+    <div class="card">
+        <h2>1. Input: EHR Patient Data</h2>
+        
+        <div class="form-group">
+            <label>Temperature: <span id="temp-val" class="val-badge">37.0 °C</span></label>
+            <input type="range" id="temp" min="35.0" max="41.0" step="0.1" value="37.0" oninput="evaluateCDSS()" onchange="evaluateCDSS()">
+        </div>
+
+        <div class="form-group">
+            <label>Heart Rate: <span id="hr-val" class="val-badge">75 bpm</span></label>
+            <input type="range" id="hr" min="50" max="150" step="1" value="75" oninput="evaluateCDSS()" onchange="evaluateCDSS()">
+        </div>
+
+        <div class="form-group">
+            <label>WBC Count: <span id="wbc-val" class="val-badge">7.5 ×10⁹/L</span></label>
+            <input type="range" id="wbc" min="2.0" max="20.0" step="0.5" value="7.5" oninput="evaluateCDSS()" onchange="evaluateCDSS()">
+        </div>
+
+        <div class="form-group">
+            <label>Documented Allergy:</label>
+            <select id="allergy" onchange="evaluateCDSS()">
+                <option value="none">None</option>
+                <option value="penicillin">Penicillin (Severe)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>CPOE Medication Order:</label>
+            <select id="med" onchange="evaluateCDSS()">
+                <option value="none">None</option>
+                <option value="amoxicillin">Amoxicillin (Penicillin class)</option>
+                <option value="ciprofloxacin">Ciprofloxacin (Quinolone class)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Column 2: Knowledge Base & Inference Engine -->
+    <div class="card">
+        <h2>2. Process: Inference Engine & Rules</h2>
+        <p style="font-size: 0.8rem; color: #666; margin-top:0;">Rules highlight when patient data matches the criteria:</p>
+        
+        <div id="rule-temp" class="rule-box">
+            <strong>Rule 1A (Abnormal Temp):</strong><br>
+            IF Temp &gt; 38.0 OR Temp &lt; 36.0 &rarr; Fever/Hypothermia
+        </div>
+        <div id="rule-hyperpyrexia" class="rule-box">
+            <strong>Rule 1B (Critical Hyperpyrexia):</strong><br>
+            IF Temp &ge; 40.0 &rarr; Medical Emergency Alert
+        </div>
+        <div id="rule-hr" class="rule-box">
+            <strong>Rule 2 (Tachycardia):</strong><br>
+            IF Heart Rate &gt; 90 bpm &rarr; Flag Tachycardia
+        </div>
+        <div id="rule-wbc" class="rule-box">
+            <strong>Rule 3 (Abnormal WBC):</strong><br>
+            IF WBC &gt; 12.0 OR WBC &lt; 4.0 &rarr; Flag Leukocytosis
+        </div>
+        <div id="rule-sirs" class="rule-box">
+            <strong>Rule 4 (Multi-Parameter Sepsis Check):</strong><br>
+            IF &ge; 2 Vital Rules (1A, 2, 3) are TRUE &rarr; Sepsis Alert
+        </div>
+        <div id="rule-drug" class="rule-box">
+            <strong>Rule 5 (Drug-Allergy Check):</strong><br>
+            IF Allergy = Penicillin AND Order = Amoxicillin
+        </div>
+    </div>
+
+    <!-- Column 3: CDSS Output -->
+    <div class="card">
+        <h2>3. Output: Clinical Alerts</h2>
+        <div id="output-area"></div>
+    </div>
+</div>
+
+<script>
+    // Function to show/hide the CDSS Notes division on click
+    function toggleNotes() {
+        var notesDiv = document.getElementById('cdss-notes');
+        var toggleBtn = document.getElementById('toggle-notes-btn');
+
+        if (notesDiv.style.display === 'block') {
+            notesDiv.style.display = 'none';
+            toggleBtn.innerHTML = '📚 Show CDSS Lecture Notes';
+        } else {
+            notesDiv.style.display = 'block';
+            toggleBtn.innerHTML = '📕 Hide CDSS Lecture Notes';
+        }
+    }
+
+    function evaluateCDSS() {
+        var temp = parseFloat(document.getElementById('temp').value);
+        var hr = parseInt(document.getElementById('hr').value, 10);
+        var wbc = parseFloat(document.getElementById('wbc').value);
+        var allergy = document.getElementById('allergy').value;
+        var med = document.getElementById('med').value;
+
+        // Update badge labels next to sliders
+        document.getElementById('temp-val').textContent = temp.toFixed(1) + ' °C';
+        document.getElementById('hr-val').textContent = hr + ' bpm';
+        document.getElementById('wbc-val').textContent = wbc.toFixed(1) + ' ×10⁹/L';
+
+        var sirsScore = 0;
+        var alertsHTML = '';
+
+        // Reset rule styles
+        document.getElementById('rule-temp').className = 'rule-box';
+        document.getElementById('rule-hyperpyrexia').className = 'rule-box';
+        document.getElementById('rule-hr').className = 'rule-box';
+        document.getElementById('rule-wbc').className = 'rule-box';
+        document.getElementById('rule-sirs').className = 'rule-box';
+        document.getElementById('rule-drug').className = 'rule-box';
+
+        // Check Rule 1A & 1B: Temperature
+        if (temp > 38.0 || temp < 36.0) {
+            sirsScore++;
+            document.getElementById('rule-temp').className = 'rule-box active';
+            
+            if (temp >= 40.0) {
+                document.getElementById('rule-hyperpyrexia').className = 'rule-box critical';
+                alertsHTML += '<div class="alert alert-danger">' +
+                    '<strong>🚨 CRITICAL ALERT: Hyperpyrexia (' + temp.toFixed(1) + ' °C)</strong><br><br>' +
+                    'Life-threatening core temperature elevation.<br>' +
+                    '<strong>Recommendation:</strong> Initiate immediate active cooling, administer antipyretics, and assess for heat stroke or severe infection.' +
+                    '</div>';
+            } else if (temp > 38.0) {
+                alertsHTML += '<div class="alert alert-info">' +
+                    '<strong>🌡️ Single-Parameter Alert: Fever Detected (' + temp.toFixed(1) + ' °C)</strong><br>' +
+                    '<strong>Recommendation:</strong> Administer antipyretic (e.g., Paracetamol) and monitor other vitals for signs of systemic infection.' +
+                    '</div>';
+            } else {
+                alertsHTML += '<div class="alert alert-info">' +
+                    '<strong>❄️ Single-Parameter Alert: Hypothermia (' + temp.toFixed(1) + ' °C)</strong><br>' +
+                    '<strong>Recommendation:</strong> Apply warming blankets and recheck core temperature.' +
+                    '</div>';
+            }
+        }
+
+        // Check Rule 2: Heart Rate
+        if (hr > 90) {
+            sirsScore++;
+            document.getElementById('rule-hr').className = 'rule-box active';
+            alertsHTML += '<div class="alert alert-info">' +
+                '<strong>💓 Single-Parameter Alert: Tachycardia (' + hr + ' bpm)</strong><br>' +
+                '<strong>Recommendation:</strong> Assess for pain, dehydration, anxiety, or underlying cardiac/infectious causes.' +
+                '</div>';
+        }
+
+        // Check Rule 3: WBC
+        if (wbc > 12.0 || wbc < 4.0) {
+            sirsScore++;
+            document.getElementById('rule-wbc').className = 'rule-box active';
+            alertsHTML += '<div class="alert alert-info">' +
+                '<strong>🔬 Lab Alert: Abnormal WBC (' + wbc.toFixed(1) + ' ×10⁹/L)</strong><br>' +
+                '<strong>Recommendation:</strong> Review differential count and evaluate for infection or inflammation.' +
+                '</div>';
+        }
+
+        // Check Rule 4: Multi-Parameter SIRS / Sepsis Alert
+        if (sirsScore >= 2) {
+            document.getElementById('rule-sirs').className = 'rule-box active';
+            alertsHTML = '<div class="alert alert-warning">' +
+                '<strong>⚠️ COMPOSITE ALERT: SIRS Criteria Met (' + sirsScore + '/3 Abnormal Vitals)</strong><br><br>' +
+                'Combining multiple abnormal vitals triggers higher-level Sepsis screening.<br>' +
+                '<strong>Actionable Recommendation:</strong> Order STAT Serum Lactate, Blood Cultures x2, and consider broad-spectrum antibiotics.' +
+                '</div>' + alertsHTML;
+        }
+
+        // Check Rule 5: Drug Allergy
+        if (allergy === 'penicillin' && med === 'amoxicillin') {
+            document.getElementById('rule-drug').className = 'rule-box critical';
+            alertsHTML = '<div class="alert alert-danger">' +
+                '<strong>🛑 HARD STOP: Drug-Allergy Interaction</strong><br><br>' +
+                'Patient is allergic to <strong>Penicillin</strong>. <strong>Amoxicillin</strong> is cross-reactive.<br>' +
+                '<strong>Actionable Recommendation:</strong> Cancel order. Consider <em>Ciprofloxacin</em> instead.' +
+                '</div>' + alertsHTML;
+        }
+
+        // Default Normal Output
+        if (alertsHTML === '') {
+            alertsHTML = '<div class="alert alert-normal">' +
+                '<strong>✅ No Clinical Alerts Triggered</strong><br><br>' +
+                'Patient vitals are within normal limits and no medication contraindications exist.' +
+                '</div>';
+        }
+
+        document.getElementById('output-area').innerHTML = alertsHTML;
+    }
+
+    function loadScenario(temp, hr, wbc, allergy, med) {
+        document.getElementById('temp').value = temp;
+        document.getElementById('hr').value = hr;
+        document.getElementById('wbc').value = wbc;
+        document.getElementById('allergy').value = allergy;
+        document.getElementById('med').value = med;
+        evaluateCDSS();
+    }
+
+    // Run once on load
+    evaluateCDSS();
+</script>
+
+</body>
+</html>
